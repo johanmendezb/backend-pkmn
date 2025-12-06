@@ -121,20 +121,20 @@ interface ComponentProps {
 export function Component({ prop1, prop2 }: ComponentProps) {
   // Hooks first
   const [state, setState] = useState()
-  
+
   // Derived state
   const derivedValue = useMemo(() => {}, [])
-  
+
   // Event handlers
   const handleClick = () => {}
-  
+
   // Effects
   useEffect(() => {}, [])
-  
+
   // Early returns
   if (loading) return <Loading />
   if (error) return <Error />
-  
+
   // Main render
   return (
     <div>
@@ -236,6 +236,7 @@ export const useAuthStore = create<AuthState>()(
 5. Always write at least one test for the component/function
 6. Never use inline styles - use Tailwind classes
 7. Never ignore TypeScript errors - fix them properly
+8. When creating new files make sure there is only one line break at the end
 
 ## Project File References
 
@@ -243,6 +244,6 @@ export const useAuthStore = create<AuthState>()(
 
 - See docs/USER_STORIES.md for detailed user stories.
 
-- See TEST_CASES.md for comprehensive test cases.
+- See docs/TEST_CASES.md for comprehensive test cases.
 
 When I ask you to implement a feature, check these files first for context.
