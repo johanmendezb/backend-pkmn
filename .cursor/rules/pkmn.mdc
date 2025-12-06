@@ -1,0 +1,248 @@
+---
+alwaysApply: true
+---
+
+# Cursor IDE Rules
+# Pokemon Technical Challenge
+
+## Project Context
+
+You are helping build a Pokemon browser application for a technical interview at Ballast Lane. The application has a Next.js frontend and Node.js/Express backend. Focus on clean architecture, testing, and code quality.
+
+## Evaluation Criteria (What the reviewers care about)
+
+1. **Clean Architecture** - Separation of concerns, component independence
+2. **Testing** - Sufficient coverage, TDD preferred
+3. **Code Quality** - Organized, readable, best practices
+4. **Functionality** - Works without bugs, NO console warnings
+5. **GenAI Usage** - Document prompts and modifications
+
+## Technical Decisions (Already Made)
+
+### Frontend Stack
+- Next.js 16 with App Router (used as SPA, not SSR)
+- TypeScript (strict mode)
+- Zustand for client state
+- TanStack Query v5 for server state
+- Tailwind CSS for styling
+- Vitest + React Testing Library for tests
+
+### Backend Stack
+- Node.js + Express
+- TypeScript
+- JWT for auth (jsonwebtoken)
+- In-memory cache (Map with TTL)
+- Vitest for tests
+
+### Architecture Patterns
+- Feature-based folder structure
+- Services layer for business logic
+- Repository pattern for external APIs
+- Centralized config for env vars
+
+## Coding Standards
+
+### TypeScript
+- NO `any` types - use `unknown` and narrow
+- Define explicit return types for functions
+- Use interfaces for object shapes
+- Use type for unions/intersections
+
+### React/Next.js
+- Use functional components only
+- Use `'use client'` directive for interactive components
+- Prefer named exports over default exports
+- Keep components small and focused
+- Extract logic to custom hooks
+
+### State Management
+- Zustand for auth state (persisted to localStorage)
+- TanStack Query for all server state
+- NO prop drilling beyond 2 levels
+
+### Error Handling
+- Use try/catch in async functions
+- Display user-friendly error messages
+- Log errors for debugging
+- Always handle loading and error states in UI
+
+### Testing
+- Write tests alongside code (not after)
+- Test behavior, not implementation
+- Use descriptive test names
+- Mock external dependencies
+
+## File Naming Conventions
+
+```
+components/    PascalCase.tsx     (LoginForm.tsx)
+hooks/         camelCase.ts       (useAuth.ts)
+services/      camelCase.ts       (authApi.ts)
+stores/        camelCase.ts       (authStore.ts)
+types/         camelCase.ts       (auth.types.ts)
+utils/         camelCase.ts       (formatters.ts)
+tests/         *.test.ts(x)       (LoginForm.test.tsx)
+```
+
+## Import Order
+
+```typescript
+// 1. React/Next
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+
+// 2. External libraries
+import { useQuery } from '@tanstack/react-query'
+import { create } from 'zustand'
+
+// 3. Internal absolute imports
+import { Button } from '@/shared/components/Button'
+import { useAuth } from '@/features/auth/hooks/useAuth'
+
+// 4. Relative imports
+import { LoginFormProps } from './LoginForm.types'
+import styles from './LoginForm.module.css'
+```
+
+## Component Structure Template
+
+```tsx
+'use client'
+
+import { useState } from 'react'
+// ... other imports
+
+// Types
+interface ComponentProps {
+  // ...
+}
+
+// Component
+export function Component({ prop1, prop2 }: ComponentProps) {
+  // Hooks first
+  const [state, setState] = useState()
+  
+  // Derived state
+  const derivedValue = useMemo(() => {}, [])
+  
+  // Event handlers
+  const handleClick = () => {}
+  
+  // Effects
+  useEffect(() => {}, [])
+  
+  // Early returns
+  if (loading) return <Loading />
+  if (error) return <Error />
+  
+  // Main render
+  return (
+    <div>
+      {/* JSX */}
+    </div>
+  )
+}
+```
+
+## API Response Patterns
+
+### Frontend API Client
+```typescript
+// Always use the configured axios instance
+import { apiClient } from '@/shared/lib/apiClient'
+
+// Service functions return typed data
+export async function fetchPokemons(params: PokemonListParams): Promise<PokemonListResponse> {
+  const { data } = await apiClient.get('/pokemons', { params })
+  return data
+}
+```
+
+### Backend Controller Pattern
+```typescript
+// Controllers are thin - delegate to services
+export const getPokemons = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { offset, limit } = req.query
+    const result = await pokemonService.getList({ offset, limit })
+    res.json(result)
+  } catch (error) {
+    next(error)
+  }
+}
+```
+
+## Common Gotchas to Avoid
+
+1. **Don't use `'use client'` on layout.tsx** - breaks hydration
+2. **Don't forget loading states** - every async operation needs one
+3. **Don't leave console.logs** - they count against you
+4. **Don't skip error boundaries** - handle errors gracefully
+5. **Don't hardcode URLs** - use environment variables
+6. **Don't forget CORS** - backend needs cors middleware
+7. **Don't store sensitive data in JWT payload** - just username
+
+## Quick Reference: TanStack Query
+
+```typescript
+// List query
+const { data, isLoading, error, refetch } = useQuery({
+  queryKey: ['pokemons', { offset, limit }],
+  queryFn: () => fetchPokemons({ offset, limit }),
+})
+
+// Detail query
+const { data } = useQuery({
+  queryKey: ['pokemon', id],
+  queryFn: () => fetchPokemonById(id),
+  enabled: !!id,
+})
+```
+
+## Quick Reference: Zustand Store
+
+```typescript
+interface AuthState {
+  token: string | null
+  user: User | null
+  isAuthenticated: boolean
+  login: (credentials: Credentials) => Promise<void>
+  logout: () => void
+}
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      token: null,
+      user: null,
+      isAuthenticated: false,
+      login: async (credentials) => {
+        const { token, user } = await authApi.login(credentials)
+        set({ token, user, isAuthenticated: true })
+      },
+      logout: () => set({ token: null, user: null, isAuthenticated: false }),
+    }),
+    { name: 'auth-storage' }
+  )
+)
+```
+
+## When Generating Code
+
+1. Always include TypeScript types
+2. Always handle loading and error states
+3. Always add aria labels for accessibility
+4. Always consider mobile-first responsive design
+5. Always write at least one test for the component/function
+6. Never use inline styles - use Tailwind classes
+7. Never ignore TypeScript errors - fix them properly
+
+## Project File References
+
+- See docs/PRODUCT_REQUIREMENTS_DOCUMENT.md for product requirements.
+
+- See docs/USER_STORIES.md for detailed user stories.
+
+- See TEST_CASES.md for comprehensive test cases.
+
+When I ask you to implement a feature, check these files first for context.
