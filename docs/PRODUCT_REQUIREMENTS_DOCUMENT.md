@@ -26,10 +26,12 @@ This document defines the requirements for a full-stack Pokémon application bui
 ### Frontend
 | Tool | Purpose |
 |------|---------|
-| Next.js 16 (App Router) | Framework, routing, SEO, image optimization |
+| Next.js 16 (App Router) | Framework, SSR, routing, middleware |
+| React 19 | UI library with React Compiler |
 | TypeScript | Type safety |
-| Zustand | Client state management |
-| TanStack Query v5 | Server state, caching, loading states |
+| Zustand | UI state only (search, sort, toggles) |
+| TanStack Query v5 | Client-side data fetching (pagination, mutations) |
+| js-cookie | Cookie management for auth token |
 | Tailwind CSS | Styling |
 | Vitest + React Testing Library | Testing |
 
@@ -52,47 +54,77 @@ This document defines the requirements for a full-stack Pokémon application bui
 
 ## Architecture Overview
 
+### SSR-First Approach
+
+This application uses a **hybrid SSR architecture**:
+
+1. **Initial Load (SSR):** Server Components fetch data for SEO and fast initial render
+2. **Subsequent Navigation (CSR):** React Query handles pagination, search, and mutations
+3. **Auth Protection:** Next.js Middleware checks cookies at the edge
+
+### Data Flow
+
+| Page/Action | Where | Method | Why |
+|-------------|-------|--------|-----|
+| Initial Pokemon list | Server Component | `fetch` + `use` hook | SEO, fast initial load |
+| Pokemon detail page | Server Component | `fetch` + `use` hook | SEO for each Pokemon |
+| Pagination (next/prev) | Client Component | React Query | Fast navigation |
+| Search/Filter | Client Component | React Query or local | Instant feedback |
+| Login | Client Component | React Query mutation | User interaction |
+| Logout | Client Component | Clear cookie + redirect | User interaction |
+
+### Authentication Flow
+
+```
+1. User submits login form (Client Component)
+2. React Query mutation calls POST /auth/login
+3. Backend validates credentials, returns JWT
+4. Frontend stores JWT in cookie (js-cookie)
+5. Middleware sees cookie on next request → allows access
+6. Server Components read cookie → fetch data with token
+7. On logout: remove cookie → middleware redirects to /login
+```
+
 ### Frontend Structure
 ```
 src/
 ├── app/                        # Next.js App Router
-│   ├── layout.tsx              # Root layout + providers
-│   ├── page.tsx                # Root redirect logic
+│   ├── layout.tsx              # Server: Root layout
+│   ├── page.tsx                # Server: Root redirect
 │   ├── login/
-│   │   └── page.tsx
+│   │   └── page.tsx            # Client: Login form
 │   ├── pokemon/
-│   │   ├── page.tsx            # List view
+│   │   ├── page.tsx            # Server: Prefetch list
+│   │   ├── PokemonPageClient.tsx  # Client: Interactive list
 │   │   └── [id]/
-│   │       └── page.tsx        # Detail view
+│   │       ├── page.tsx        # Server: Prefetch detail
+│   │       └── PokemonDetailClient.tsx  # Client: If needed
+│   ├── error.tsx               # Error boundary
 │   └── not-found.tsx
 │
-├── features/                   # Feature modules (vertical slices)
+├── features/                   # Feature modules
 │   ├── auth/
 │   │   ├── components/         # LoginForm.tsx
-│   │   ├── hooks/              # useAuth.ts
-│   │   ├── services/           # authApi.ts
-│   │   ├── store/              # authStore.ts
+│   │   ├── services/           # authApi.ts (with cookie management)
 │   │   └── types/              # auth.types.ts
 │   │
 │   └── pokemon/
-│       ├── components/         # PokemonCard, PokemonList, SearchBar, SortControls, Pagination
+│       ├── components/         # PokemonCard, PokemonList, etc.
 │       ├── hooks/              # usePokemonList, usePokemonDetail
 │       ├── services/           # pokemonApi.ts
 │       └── types/              # pokemon.types.ts
 │
 ├── shared/
-│   ├── components/             # Button, Input, Layout, ProtectedRoute, LoadingSpinner
+│   ├── components/             # Button, Input, Layout, LoadingSpinner
 │   ├── hooks/                  # useDebounce
-│   ├── lib/                    # apiClient.ts (axios instance with interceptors)
-│   └── utils/                  # formatters, validators
+│   ├── lib/                    # apiClient.ts
+│   ├── stores/                 # uiStore.ts (Zustand - UI state only)
+│   └── providers/              # QueryProvider.tsx
 │
-├── styles/
-│   └── globals.css             # Tailwind + Figma design tokens
+├── middleware.ts               # Auth protection at edge
 │
-└── __tests__/                  # Test files
-    ├── features/
-    └── shared/
-```
+└── styles/
+    └── globals.css
 
 ### Backend Structure
 ```

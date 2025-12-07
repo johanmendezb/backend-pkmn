@@ -21,9 +21,14 @@
   - [x] Implement pokeApiRepository (external API integration)
   - [x] Implement pokemonService with caching
   - [x] Implement pokemonController
+- [x] **Infrastructure**
+  - [x] Implement inMemoryCache with TTL
+  - [x] Implement global error handler
+  - [x] Add request logging (optional)
 
 ### Milestone 3: Frontend Foundation
-- [ ] Initialize Next.js 14 + TypeScript project
+- [x] Add project documentation
+- [x] Initialize Next.js 16 + TypeScript project
 - [ ] Configure Tailwind CSS
 - [ ] Set up project folder structure (feature-based)
 - [ ] Configure TanStack Query provider
@@ -112,10 +117,12 @@
   - [ ] Prepare architecture walkthrough
   - [ ] Anticipate technical questions
 
-### Milestone 9: Add GEN_AI.md
+-### Milestone 9: Add GEN_AI.md
 - [ ] **Share prompts**
   - [ ] Backend
   - [ ] Frontend
+
+---
 
 ## Success Criteria
 

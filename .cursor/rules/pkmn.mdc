@@ -1,13 +1,12 @@
 ---
 alwaysApply: true
 ---
-
 # Cursor IDE Rules
 # Pokemon Technical Challenge
 
 ## Project Context
 
-You are helping build a Pokemon browser application for a technical interview at Ballast Lane. The application has a Next.js frontend and Node.js/Express backend. Focus on clean architecture, testing, and code quality.
+You are helping build a Pokemon browser application for a technical interview at Ballast Lane. The application has a Next.js frontend (SSR-first) and Node.js/Express backend. Focus on clean architecture, testing, and code quality.
 
 ## Evaluation Criteria (What the reviewers care about)
 
@@ -20,10 +19,15 @@ You are helping build a Pokemon browser application for a technical interview at
 ## Technical Decisions (Already Made)
 
 ### Frontend Stack
-- Next.js 16 with App Router (used as SPA, not SSR)
+- **Next.js 16 with App Router** (latest, supports React 19)
+- **React 19** with React Compiler enabled
 - TypeScript (strict mode)
-- Zustand for client state
-- TanStack Query v5 for server state
+- **SSR-first architecture** with hybrid client-side interactions
+- **Cookies for auth token** (frontend-managed via js-cookie)
+- **Next.js Middleware** for route protection
+- **Zustand for UI state only** (search input, sort selection, UI toggles)
+- **TanStack Query v5** for client-side data fetching (pagination, search, mutations)
+- **React 19 `use` hook** for consuming promises in Server Components
 - Tailwind CSS for styling
 - Vitest + React Testing Library for tests
 
@@ -31,14 +35,139 @@ You are helping build a Pokemon browser application for a technical interview at
 - Node.js + Express
 - TypeScript
 - JWT for auth (jsonwebtoken)
+- Cookie-based token delivery (frontend stores in cookie)
 - In-memory cache (Map with TTL)
 - Vitest for tests
 
 ### Architecture Patterns
 - Feature-based folder structure
+- Server Components for initial data fetching (SSR + SEO)
+- Client Components for interactivity
 - Services layer for business logic
 - Repository pattern for external APIs
 - Centralized config for env vars
+
+## SSR Architecture
+
+### Data Fetching Strategy
+
+| Page/Action | Where | Method | Why |
+|-------------|-------|--------|-----|
+| Initial Pokemon list | Server Component | `fetch` + `use` hook | SEO, fast initial load |
+| Pokemon detail page | Server Component | `fetch` + `use` hook | SEO for each Pokemon |
+| Pagination (next/prev) | Client Component | React Query | Fast navigation, no full reload |
+| Search/Filter | Client Component | React Query or local | Instant feedback |
+| Login | Client Component | React Query mutation | User interaction |
+| Logout | Client Component | React Query + clear cookie | User interaction |
+
+### Server vs Client Components
+
+```
+app/
+├── layout.tsx              # Server (providers are client)
+├── page.tsx                # Server (redirect logic)
+├── login/
+│   └── page.tsx            # Client ('use client' - form interaction)
+├── pokemon/
+│   ├── page.tsx            # Server (prefetch list)
+│   ├── PokemonPageClient.tsx  # Client (search, sort, pagination)
+│   └── [id]/
+│       └── page.tsx        # Server (prefetch detail)
+│       └── PokemonDetailClient.tsx  # Client (if any interactivity)
+```
+
+### Middleware for Auth
+
+```typescript
+// middleware.ts - runs on edge, checks cookie
+export function middleware(request: NextRequest) {
+  const token = request.cookies.get('auth-token')
+  const isAuthPage = request.nextUrl.pathname === '/login'
+  const isProtectedRoute = request.nextUrl.pathname.startsWith('/pokemon')
+
+  if (isProtectedRoute && !token) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  if (isAuthPage && token) {
+    return NextResponse.redirect(new URL('/pokemon', request.url))
+  }
+
+  return NextResponse.next()
+}
+
+export const config = {
+  matcher: ['/login', '/pokemon/:path*']
+}
+```
+
+### Cookie Management
+
+```typescript
+// Use js-cookie for frontend cookie management
+import Cookies from 'js-cookie'
+
+// On login success
+Cookies.set('auth-token', token, {
+  expires: 1, // 1 day
+  sameSite: 'strict',
+  secure: process.env.NODE_ENV === 'production'
+})
+
+// On logout
+Cookies.remove('auth-token')
+
+// Reading token for API calls
+const token = Cookies.get('auth-token')
+```
+
+### Server Component Data Fetching
+
+```typescript
+// app/pokemon/page.tsx (Server Component)
+import { cookies } from 'next/headers'
+import { PokemonPageClient } from './PokemonPageClient'
+
+async function getPokemons() {
+  const cookieStore = await cookies()
+  const token = cookieStore.get('auth-token')?.value
+
+  const res = await fetch(`${process.env.API_URL}/pokemons?limit=20`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store' // or use revalidate for caching
+  })
+
+  if (!res.ok) throw new Error('Failed to fetch')
+  return res.json()
+}
+
+export default async function PokemonPage() {
+  const initialData = await getPokemons()
+
+  return <PokemonPageClient initialData={initialData} />
+}
+```
+
+### Client Component with React Query Hydration
+
+```typescript
+// app/pokemon/PokemonPageClient.tsx
+'use client'
+
+import { useQuery } from '@tanstack/react-query'
+
+export function PokemonPageClient({ initialData }) {
+  const [page, setPage] = useState(0)
+
+  const { data } = useQuery({
+    queryKey: ['pokemons', page],
+    queryFn: () => fetchPokemons({ offset: page * 20 }),
+    initialData: page === 0 ? initialData : undefined,
+  })
+
+  // ... rest of component
+}
+```
 
 ## Coding Standards
 
@@ -48,20 +177,30 @@ You are helping build a Pokemon browser application for a technical interview at
 - Use interfaces for object shapes
 - Use type for unions/intersections
 
-### React/Next.js
-- Use functional components only
-- Use `'use client'` directive for interactive components
-- Prefer named exports over default exports
-- Keep components small and focused
-- Extract logic to custom hooks
+### React 19 / Next.js 15
+- **Server Components by default** - only add 'use client' when needed
+- Use React 19's `use` hook for consuming promises in Server Components
+- Use `async/await` in Server Components for data fetching
+- Keep Client Components small and focused on interactivity
+- Use Next.js Middleware for auth protection (not client-side redirects)
+
+### When to use 'use client'
+- Forms and user input
+- useState, useEffect, useRef
+- Event handlers (onClick, onChange, etc.)
+- Browser-only APIs
+- React Query hooks
+- Zustand stores
 
 ### State Management
-- Zustand for auth state (persisted to localStorage)
-- TanStack Query for all server state
-- NO prop drilling beyond 2 levels
+- **Cookies** for auth token (js-cookie library)
+- **Zustand** for UI state only (search input, sort, toggles)
+- **React Query** for client-side server state (pagination, mutations)
+- **Server Components** for initial data (SSR)
 
 ### Error Handling
 - Use try/catch in async functions
+- Use error.tsx for route error boundaries
 - Display user-friendly error messages
 - Log errors for debugging
 - Always handle loading and error states in UI
@@ -71,6 +210,7 @@ You are helping build a Pokemon browser application for a technical interview at
 - Test behavior, not implementation
 - Use descriptive test names
 - Mock external dependencies
+- Test both Server and Client Components appropriately
 
 ## File Naming Conventions
 
@@ -104,36 +244,65 @@ import { LoginFormProps } from './LoginForm.types'
 import styles from './LoginForm.module.css'
 ```
 
-## Component Structure Template
+## Component Structure Templates
+
+### Server Component (default)
+
+```tsx
+// app/pokemon/page.tsx
+import { cookies } from 'next/headers'
+import { PokemonPageClient } from './PokemonPageClient'
+
+async function getData() {
+  const cookieStore = await cookies()
+  const token = cookieStore.get('auth-token')?.value
+
+  const res = await fetch(`${process.env.API_URL}/pokemons`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+
+  if (!res.ok) throw new Error('Failed to fetch')
+  return res.json()
+}
+
+export default async function PokemonPage() {
+  const data = await getData()
+  return <PokemonPageClient initialData={data} />
+}
+```
+
+### Client Component
 
 ```tsx
 'use client'
 
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 // ... other imports
 
 // Types
 interface ComponentProps {
-  // ...
+  initialData: PokemonListResponse
 }
 
 // Component
-export function Component({ prop1, prop2 }: ComponentProps) {
-  // Hooks first
-  const [state, setState] = useState()
+export function PokemonPageClient({ initialData }: ComponentProps) {
+  // UI State (Zustand or local)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [page, setPage] = useState(0)
 
-  // Derived state
-  const derivedValue = useMemo(() => {}, [])
+  // Server State (React Query)
+  const { data, isLoading } = useQuery({
+    queryKey: ['pokemons', page],
+    queryFn: () => fetchPokemons({ offset: page * 20 }),
+    initialData: page === 0 ? initialData : undefined,
+  })
 
   // Event handlers
-  const handleClick = () => {}
-
-  // Effects
-  useEffect(() => {}, [])
+  const handleSearch = (term: string) => {}
 
   // Early returns
-  if (loading) return <Loading />
-  if (error) return <Error />
+  if (isLoading) return <Loading />
 
   // Main render
   return (
@@ -144,87 +313,222 @@ export function Component({ prop1, prop2 }: ComponentProps) {
 }
 ```
 
-## API Response Patterns
+### Zustand Store (UI State Only)
 
-### Frontend API Client
 ```typescript
-// Always use the configured axios instance
-import { apiClient } from '@/shared/lib/apiClient'
+// stores/uiStore.ts
+import { create } from 'zustand'
 
-// Service functions return typed data
-export async function fetchPokemons(params: PokemonListParams): Promise<PokemonListResponse> {
-  const { data } = await apiClient.get('/pokemons', { params })
-  return data
+interface UIState {
+  searchTerm: string
+  sortBy: 'name' | 'number'
+  sortOrder: 'asc' | 'desc'
+  setSearchTerm: (term: string) => void
+  setSorting: (by: 'name' | 'number', order: 'asc' | 'desc') => void
+}
+
+export const useUIStore = create<UIState>((set) => ({
+  searchTerm: '',
+  sortBy: 'number',
+  sortOrder: 'asc',
+  setSearchTerm: (term) => set({ searchTerm: term }),
+  setSorting: (by, order) => set({ sortBy: by, sortOrder: order }),
+}))
+```
+
+## API Patterns
+
+### Server-Side Fetch (Server Components)
+```typescript
+// For Server Components - use native fetch with cookies
+import { cookies } from 'next/headers'
+
+async function fetchFromAPI(endpoint: string) {
+  const cookieStore = await cookies()
+  const token = cookieStore.get('auth-token')?.value
+
+  const res = await fetch(`${process.env.API_URL}${endpoint}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+  })
+
+  if (!res.ok) {
+    throw new Error(`API Error: ${res.status}`)
+  }
+
+  return res.json()
 }
 ```
 
-### Backend Controller Pattern
+### Client-Side API Client
 ```typescript
-// Controllers are thin - delegate to services
-export const getPokemons = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { offset, limit } = req.query
-    const result = await pokemonService.getList({ offset, limit })
-    res.json(result)
-  } catch (error) {
-    next(error)
+// shared/lib/apiClient.ts
+import Cookies from 'js-cookie'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL
+
+export async function apiClient<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const token = Cookies.get('auth-token')
+
+  const res = await fetch(`${API_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+      ...options.headers,
+    },
+  })
+
+  if (res.status === 401) {
+    Cookies.remove('auth-token')
+    window.location.href = '/login'
+    throw new Error('Unauthorized')
   }
+
+  if (!res.ok) {
+    throw new Error(`API Error: ${res.status}`)
+  }
+
+  return res.json()
+}
+```
+
+### Auth Service (Client-Side)
+```typescript
+// features/auth/services/authApi.ts
+import Cookies from 'js-cookie'
+import { apiClient } from '@/shared/lib/apiClient'
+
+export async function login(credentials: LoginCredentials) {
+  const response = await apiClient<LoginResponse>('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(credentials),
+  })
+
+  // Store token in cookie
+  Cookies.set('auth-token', response.token, {
+    expires: 1, // 1 day
+    sameSite: 'strict',
+    secure: process.env.NODE_ENV === 'production',
+  })
+
+  return response
+}
+
+export function logout() {
+  Cookies.remove('auth-token')
+}
+
+export function isAuthenticated(): boolean {
+  return !!Cookies.get('auth-token')
+}
+```
+
+### React Query Hooks
+```typescript
+// features/pokemon/hooks/usePokemonList.ts
+import { useQuery } from '@tanstack/react-query'
+import { apiClient } from '@/shared/lib/apiClient'
+
+export function usePokemonList(params: { offset: number; limit: number }, initialData?: PokemonListResponse) {
+  return useQuery({
+    queryKey: ['pokemons', params],
+    queryFn: () => apiClient<PokemonListResponse>(`/pokemons?offset=${params.offset}&limit=${params.limit}`),
+    initialData: params.offset === 0 ? initialData : undefined,
+  })
 }
 ```
 
 ## Common Gotchas to Avoid
 
-1. **Don't use `'use client'` on layout.tsx** - breaks hydration
-2. **Don't forget loading states** - every async operation needs one
-3. **Don't leave console.logs** - they count against you
-4. **Don't skip error boundaries** - handle errors gracefully
+1. **Don't use 'use client' unnecessarily** - Server Components are the default
+2. **Don't use hooks in Server Components** - useState, useEffect, etc. require 'use client'
+3. **Don't forget to await cookies()** - Next.js 15 requires awaiting cookies()
+4. **Don't leave console.logs** - they count against you
 5. **Don't hardcode URLs** - use environment variables
 6. **Don't forget CORS** - backend needs cors middleware
-7. **Don't store sensitive data in JWT payload** - just username
+7. **Don't import Client Components into Server Components directly for data** - pass data as props
+8. **Don't use localStorage for auth** - use cookies for SSR compatibility
+9. **Don't forget the middleware.ts** - it handles auth protection
+10. **Don't mix server-only and client-only code** - keep clear boundaries
 
-## Quick Reference: TanStack Query
+## Quick Reference: Next.js 15 Middleware
 
 ```typescript
-// List query
-const { data, isLoading, error, refetch } = useQuery({
+// middleware.ts (root level)
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+
+export function middleware(request: NextRequest) {
+  const token = request.cookies.get('auth-token')?.value
+  const { pathname } = request.nextUrl
+
+  // Protect /pokemon routes
+  if (pathname.startsWith('/pokemon') && !token) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  // Redirect authenticated users away from login
+  if (pathname === '/login' && token) {
+    return NextResponse.redirect(new URL('/pokemon', request.url))
+  }
+
+  return NextResponse.next()
+}
+
+export const config = {
+  matcher: ['/login', '/pokemon/:path*'],
+}
+```
+
+## Quick Reference: TanStack Query with SSR
+
+```typescript
+// For initial data from Server Component
+const { data } = useQuery({
   queryKey: ['pokemons', { offset, limit }],
   queryFn: () => fetchPokemons({ offset, limit }),
+  initialData: offset === 0 ? initialData : undefined, // From server
+  staleTime: 60 * 1000, // Consider fresh for 1 minute
 })
 
-// Detail query
-const { data } = useQuery({
-  queryKey: ['pokemon', id],
-  queryFn: () => fetchPokemonById(id),
-  enabled: !!id,
+// For mutations (login, etc.)
+const loginMutation = useMutation({
+  mutationFn: login,
+  onSuccess: () => {
+    router.push('/pokemon')
+  },
 })
 ```
 
-## Quick Reference: Zustand Store
+## Quick Reference: Zustand (UI State Only)
 
 ```typescript
-interface AuthState {
-  token: string | null
-  user: User | null
-  isAuthenticated: boolean
-  login: (credentials: Credentials) => Promise<void>
-  logout: () => void
+// No persistence needed - UI state resets on page load
+import { create } from 'zustand'
+
+interface UIState {
+  searchTerm: string
+  sortBy: 'name' | 'number'
+  sortOrder: 'asc' | 'desc'
+  setSearchTerm: (term: string) => void
+  setSorting: (by: 'name' | 'number', order: 'asc' | 'desc') => void
+  reset: () => void
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      token: null,
-      user: null,
-      isAuthenticated: false,
-      login: async (credentials) => {
-        const { token, user } = await authApi.login(credentials)
-        set({ token, user, isAuthenticated: true })
-      },
-      logout: () => set({ token: null, user: null, isAuthenticated: false }),
-    }),
-    { name: 'auth-storage' }
-  )
-)
+export const useUIStore = create<UIState>((set) => ({
+  searchTerm: '',
+  sortBy: 'number',
+  sortOrder: 'asc',
+  setSearchTerm: (searchTerm) => set({ searchTerm }),
+  setSorting: (sortBy, sortOrder) => set({ sortBy, sortOrder }),
+  reset: () => set({ searchTerm: '', sortBy: 'number', sortOrder: 'asc' }),
+}))
 ```
 
 ## When Generating Code
