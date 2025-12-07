@@ -112,7 +112,10 @@
   - [ ] Prepare architecture walkthrough
   - [ ] Anticipate technical questions
 
----
+### Milestone 9: Add GEN_AI.md
+- [ ] **Share prompts**
+  - [ ] Backend
+  - [ ] Frontend
 
 ## Success Criteria
 
