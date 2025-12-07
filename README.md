@@ -30,8 +30,8 @@ A lightweight Node.js/Express backend that proxies the PokeAPI, providing authen
 ### Verify Installation
 
 ```bash
-node --version  # Should output v18.17.0 or higher
-npm --version   # Should output 9.0.0 or higher
+node --version  # Should output v20.19.4 or higher
+npm --version   # Should output 10.8.2 higher
 ```
 
 ---
