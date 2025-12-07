@@ -1,6 +1,6 @@
 ## Milestones
 
-### Milestone 1: Backend Foundation (Hours 0-4)
+### Milestone 1: Backend Foundation
 - [x] Add project documentation
 - [x] Initialize Node.js + Express + TypeScript project
 - [x] Configure ESLint, Prettier, tsconfig
@@ -9,24 +9,20 @@
 - [x] Set up Vitest for testing (TDD approach)
 - [x] Create test setup file with helpers
 
-### Milestone 2: Backend Core Features - TDD (Hours 4-10)
-- [ ] **Auth Feature**
-  - [ ] Write tests for authController (login endpoint)
-  - [ ] Write tests for authMiddleware (JWT verification)
-  - [ ] Implement authService and authController
-  - [ ] Implement authMiddleware
-- [ ] **Pokemon Feature**
-  - [ ] Write tests for pokemonController
-  - [ ] Write tests for pokemonService
-  - [ ] Implement pokeApiRepository (external API integration)
-  - [ ] Implement pokemonService with caching
-  - [ ] Implement pokemonController
-- [ ] **Infrastructure**
-  - [ ] Implement inMemoryCache with TTL
-  - [ ] Implement global error handler
-  - [ ] Add request logging (optional)
+### Milestone 2: Backend Core Features - TDD
+- [x] **Auth Feature**
+  - [x] Write tests for authController (login endpoint)
+  - [x] Write tests for authMiddleware (JWT verification)
+  - [x] Implement authService and authController
+  - [x] Implement authMiddleware
+- [x] **Pokemon Feature**
+  - [x] Write tests for pokemonController
+  - [x] Write tests for pokemonService
+  - [x] Implement pokeApiRepository (external API integration)
+  - [x] Implement pokemonService with caching
+  - [x] Implement pokemonController
 
-### Milestone 3: Frontend Foundation (Hours 10-16)
+### Milestone 3: Frontend Foundation
 - [ ] Initialize Next.js 14 + TypeScript project
 - [ ] Configure Tailwind CSS
 - [ ] Set up project folder structure (feature-based)
@@ -36,7 +32,7 @@
 - [ ] Implement ProtectedRoute component
 - [ ] Set up app routing structure
 
-### Milestone 4: Frontend Core Features (Hours 16-26)
+### Milestone 4: Frontend Core Features
 - [ ] **Auth Feature**
   - [ ] LoginForm component with validation
   - [ ] Login page with error handling
@@ -58,7 +54,7 @@
   - [ ] Test full user flows manually
   - [ ] Fix any integration issues
 
-### Milestone 5: Frontend Testing (Hours 26-32)
+### Milestone 5: Frontend Testing
 - [ ] Configure Vitest + React Testing Library
 - [ ] Create test setup and mocks
 - [ ] **Unit Tests**
@@ -72,7 +68,7 @@
   - [ ] Pokemon list with search/sort
   - [ ] Navigation between list and detail
 
-### Milestone 6: Polish (Hours 32-40)
+### Milestone 6: Polish
 - [ ] **Backend Polish**
   - [ ] Review error messages
   - [ ] Add rate limiting (optional)
@@ -87,7 +83,7 @@
   - [ ] Eliminate ALL console warnings
   - [ ] SEO meta tags
 
-### Milestone 7: Deployment (Hours 40-44)
+### Milestone 7: Deployment
 - [ ] **Backend Deployment (Railway)**
   - [ ] Configure production environment
   - [ ] Set up environment variables
@@ -101,7 +97,7 @@
   - [ ] Complete GENAI_USAGE.md
   - [ ] Final code review
 
-### Milestone 8: Optional Enhancements (Hours 44-48)
+### Milestone 8: Optional Enhancements
 - [ ] **CI/CD Pipeline**
   - [ ] GitHub Actions for backend (lint, test, deploy)
   - [ ] GitHub Actions for frontend (lint, test, deploy)
