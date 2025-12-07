@@ -241,9 +241,7 @@ export const useAuthStore = create<AuthState>()(
 ## Project File References
 
 - See docs/PRODUCT_REQUIREMENTS_DOCUMENT.md for product requirements.
-
 - See docs/USER_STORIES.md for detailed user stories.
-
 - See docs/TEST_CASES.md for comprehensive test cases.
 
 When I ask you to implement a feature, check these files first for context.
