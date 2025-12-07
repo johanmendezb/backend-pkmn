@@ -24,9 +24,8 @@ A lightweight Node.js/Express backend that proxies the PokeAPI, providing authen
 
 | Requirement | Version | Notes |
 |-------------|---------|-------|
-| Node.js | >= 18.17.0 | LTS recommended |
-| npm | >= 9.0.0 | Comes with Node.js |
-| Git | >= 2.0.0 | For version control |
+| Node.js | >= v20.19.4 | LTS recommended |
+| npm | >= 10.8.2 | Comes with Node.js |
 
 ### Verify Installation
 
@@ -44,54 +43,40 @@ npm --version   # Should output 9.0.0 or higher
 | Package | Version | Purpose |
 |---------|---------|---------|
 | express | ^4.18.2 | Web framework |
-| typescript | ^5.3.3 | Type safety |
 | jsonwebtoken | ^9.0.2 | JWT authentication |
-| axios | ^1.6.5 | HTTP client for PokeAPI |
+| axios | ^1.6.2 | HTTP client for PokeAPI |
 | cors | ^2.8.5 | Cross-origin resource sharing |
 | dotenv | ^16.3.1 | Environment variables |
-| helmet | ^7.1.0 | Security headers |
-| express-rate-limit | ^7.1.5 | Rate limiting |
 
 ### Development Dependencies
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| vitest | ^1.2.1 | Testing framework |
-| supertest | ^6.3.4 | HTTP testing |
+| typescript | ^5.3.3 | Type safety |
+| vitest | ^1.1.0 | Testing framework |
+| supertest | ^6.3.3 | HTTP testing |
 | ts-node-dev | ^2.0.0 | Development server with hot reload |
 | @types/express | ^4.17.21 | Express type definitions |
 | @types/jsonwebtoken | ^9.0.5 | JWT type definitions |
 | @types/cors | ^2.8.17 | CORS type definitions |
 | @types/supertest | ^6.0.2 | Supertest type definitions |
-| eslint | ^8.56.0 | Code linting |
-| prettier | ^3.2.4 | Code formatting |
-| @typescript-eslint/eslint-plugin | ^6.19.1 | TypeScript ESLint rules |
-| @typescript-eslint/parser | ^6.19.1 | TypeScript ESLint parser |
+| @types/node | ^20.10.5 | Node.js type definitions |
 
 ### Full package.json
 
 ```json
 {
-  "name": "pokemon-api-backend",
+  "name": "backend-pkmn",
   "version": "1.0.0",
-  "description": "Pokemon API backend for technical challenge",
+  "description": "Pokemon browser application backend",
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "lint": "eslint src --ext .ts",
-    "lint:fix": "eslint src --ext .ts --fix",
-    "format": "prettier --write \"src/**/*.ts\"",
-    "typecheck": "tsc --noEmit"
+    "test": "vitest"
   },
-  "engines": {
-    "node": ">=18.17.0"
-  },
-  "keywords": ["pokemon", "api", "express", "typescript"],
+  "keywords": [],
   "author": "",
   "license": "ISC"
 }
@@ -105,8 +90,8 @@ npm --version   # Should output 9.0.0 or higher
 
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd backend
+git clone git@github.com:johanmendezb/backend-pkmn.git
+cd backend-pkmn
 
 # Install dependencies
 npm install
@@ -137,7 +122,7 @@ npm run dev
 # Health check
 curl http://localhost:3001/health
 
-# Expected response: {"status":"ok","timestamp":"..."}
+# Expected response: {"status":"ok"}
 ```
 
 ---
@@ -149,8 +134,7 @@ src/
 ├── config/                     # Configuration
 │   ├── index.ts               # Main config export
 │   ├── env.ts                 # Environment validation
-│   ├── constants.ts           # App constants
-│   └── rateLimit.ts           # Rate limiting config
+│   └── constants.ts           # App constants
 │
 ├── controllers/               # HTTP request handlers
 │   ├── authController.ts      # Login endpoint
@@ -171,8 +155,7 @@ src/
 │
 ├── middleware/                # Express middleware
 │   ├── authMiddleware.ts      # JWT verification
-│   ├── errorHandler.ts        # Global error handling
-│   └── rateLimiter.ts         # Rate limiting
+│   └── errorHandler.ts        # Global error handling
 │
 ├── routes/                    # Route definitions
 │   └── index.ts               # All routes
@@ -180,13 +163,10 @@ src/
 ├── types/                     # Shared TypeScript types
 │   └── index.ts
 │
-├── utils/                     # Utility functions
-│   └── logger.ts              # Logging utility (optional)
-│
 ├── app.ts                     # Express app setup
 └── server.ts                  # Server entry point
 
-__tests__/                     # Test files (mirrors src/)
+__tests__/                     # Test files
 ├── controllers/
 │   ├── authController.test.ts
 │   └── pokemonController.test.ts
@@ -194,8 +174,6 @@ __tests__/                     # Test files (mirrors src/)
 │   └── authMiddleware.test.ts
 ├── services/
 │   └── pokemonService.test.ts
-├── cache/
-│   └── inMemoryCache.test.ts
 └── setup.ts                   # Test configuration
 ```
 
@@ -208,37 +186,19 @@ __tests__/                     # Test files (mirrors src/)
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `PORT` | Server port | `3001` |
-| `JWT_SECRET` | Secret for JWT signing (min 32 chars) | `your-super-secret-key-min-32-chars` |
-| `NODE_ENV` | Environment mode | `development` or `production` |
-
-### Optional Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
+| `JWT_SECRET` | Secret for JWT signing | `your-secret-key-change-in-production` |
 | `POKEAPI_BASE_URL` | PokeAPI base URL | `https://pokeapi.co/api/v2` |
-| `CACHE_TTL_SECONDS` | Cache time-to-live | `300` (5 minutes) |
-| `RATE_LIMIT_WINDOW_MS` | Rate limit window | `900000` (15 minutes) |
-| `RATE_LIMIT_MAX_REQUESTS` | Max requests per window | `100` |
+| `NODE_ENV` | Environment mode | `development`, `production`, or `test` |
+| `CACHE_TTL_SECONDS` | Cache time-to-live in seconds | `3600` |
 
 ### .env.example
 
 ```env
-# Server
 PORT=3001
-NODE_ENV=development
-
-# Authentication
-JWT_SECRET=your-super-secret-jwt-key-minimum-32-characters
-
-# External APIs
+JWT_SECRET=your-secret-key-change-in-production
 POKEAPI_BASE_URL=https://pokeapi.co/api/v2
-
-# Caching
-CACHE_TTL_SECONDS=300
-
-# Rate Limiting
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
+NODE_ENV=development
+CACHE_TTL_SECONDS=3600
 ```
 
 ---
@@ -272,8 +232,7 @@ GET /health
 **Response (200):**
 ```json
 {
-  "status": "ok",
-  "timestamp": "2024-01-15T10:30:00.000Z"
+  "status": "ok"
 }
 ```
 
@@ -363,7 +322,7 @@ Authorization: Bearer <token>
 **Response (401) - Unauthorized:**
 ```json
 {
-  "error": "No token provided",
+  "error": "Authentication required",
   "statusCode": 401
 }
 ```
@@ -393,39 +352,24 @@ Authorization: Bearer <token>
   "id": 1,
   "name": "bulbasaur",
   "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png",
-  "types": [
-    { "name": "grass" },
-    { "name": "poison" }
-  ],
   "abilities": [
     { "name": "overgrow", "isHidden": false },
     { "name": "chlorophyll", "isHidden": true }
   ],
   "moves": [
     { "name": "razor-wind" },
-    { "name": "swords-dance" },
-    { "name": "cut" }
+    { "name": "swords-dance" }
   ],
   "forms": [
     { "name": "bulbasaur" }
-  ],
-  "stats": {
-    "hp": 45,
-    "attack": 49,
-    "defense": 49,
-    "specialAttack": 65,
-    "specialDefense": 65,
-    "speed": 45
-  },
-  "height": 7,
-  "weight": 69
+  ]
 }
 ```
 
 **Response (400) - Invalid ID:**
 ```json
 {
-  "error": "Invalid pokemon ID",
+  "error": "Invalid Pokemon ID",
   "statusCode": 400
 }
 ```
@@ -445,14 +389,14 @@ Authorization: Bearer <token>
 ### Run Tests
 
 ```bash
-# Run all tests once
+# Run all tests
 npm test
 
-# Run tests in watch mode (recommended during development)
-npm run test:watch
+# Run tests in watch mode
+npm test -- --watch
 
 # Run tests with coverage report
-npm run test:coverage
+npm test -- --coverage
 ```
 
 ### Test Structure
@@ -467,10 +411,8 @@ __tests__/
 │   └── pokemonController.test.ts # Pokemon endpoint tests
 ├── middleware/
 │   └── authMiddleware.test.ts  # Auth middleware tests
-├── services/
-│   └── pokemonService.test.ts  # Service logic tests
-└── cache/
-    └── inMemoryCache.test.ts   # Cache tests
+└── services/
+    └── pokemonService.test.ts  # Service logic tests
 ```
 
 ### Test Helpers
@@ -479,14 +421,13 @@ The `setup.ts` file provides helpers:
 
 ```typescript
 // Generate valid JWT for tests
-const token = generateValidToken()
+const token = generateValidToken('admin')
 
 // Generate expired JWT for tests
-const expiredToken = generateExpiredToken()
+const expiredToken = generateExpiredToken('admin')
 
 // Mock PokeAPI responses
-const mockPokemonList = getMockPokemonList()
-const mockPokemonDetail = getMockPokemonDetail(1)
+import { mockPokemonListResponse, mockPokemonDetailResponse } from '../__tests__/setup'
 ```
 
 ### Coverage Goals
@@ -496,7 +437,6 @@ const mockPokemonDetail = getMockPokemonDetail(1)
 | Controllers | 90% |
 | Services | 95% |
 | Middleware | 95% |
-| Cache | 100% |
 
 ---
 
@@ -513,7 +453,6 @@ Express was chosen for its:
 ### Why In-Memory Cache over Redis?
 
 For this technical challenge:
-- No external dependencies to manage
 - Faster setup time
 - Sufficient for single-instance deployment
 - Demonstrates caching pattern (easily swappable to Redis)
@@ -547,18 +486,7 @@ Controller → Service → Repository → External API
 
 ### Code Style
 
-We use ESLint and Prettier for consistent code style.
-
-```bash
-# Check for linting errors
-npm run lint
-
-# Fix linting errors automatically
-npm run lint:fix
-
-# Format code with Prettier
-npm run format
-```
+Follow TypeScript best practices and maintain consistent formatting.
 
 ### Commit Messages
 
@@ -621,7 +549,7 @@ const getPokemon = async (req: Request, res: Response, next: NextFunction) => {
    JWT_SECRET=<generate-secure-secret>
    NODE_ENV=production
    POKEAPI_BASE_URL=https://pokeapi.co/api/v2
-   CACHE_TTL_SECONDS=300
+   CACHE_TTL_SECONDS=3600
    ```
 
 3. **Configure Build**
@@ -659,10 +587,7 @@ npm install
 #### TypeScript compilation errors
 
 ```bash
-# Check types without emitting
-npm run typecheck
-
-# Clear TypeScript cache
+# Clear TypeScript cache and rebuild
 rm -rf dist
 npm run build
 ```
