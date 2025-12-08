@@ -1,10 +1,7 @@
 import { pokeApiRepository } from '../externalApis/pokeApi/pokeApiRepository'
 import { cache } from '../cache/inMemoryCache'
 import { env } from '../config'
-import {
-  PokeApiPokemonListResponse,
-  PokeApiPokemonDetail,
-} from '../externalApis/pokeApi/pokeApi.types'
+import { PokeApiPokemonDetail } from '../externalApis/pokeApi/pokeApi.types'
 
 export interface PokemonListItem {
   id: number
@@ -32,10 +29,15 @@ export interface PokemonForm {
   name: string
 }
 
+export interface PokemonType {
+  name: string
+}
+
 export interface PokemonDetail {
   id: number
   name: string
   image: string | null
+  types: PokemonType[]
   abilities: PokemonAbility[]
   moves: PokemonMove[]
   forms: PokemonForm[]
@@ -68,6 +70,9 @@ export class PokemonService {
         data.sprites.other?.['official-artwork']?.front_default ||
         data.sprites.front_default ||
         null,
+      types: data.types.map((type) => ({
+        name: type.type.name,
+      })),
       abilities: data.abilities.map((ability) => ({
         name: ability.ability.name,
         isHidden: ability.is_hidden,
@@ -81,7 +86,41 @@ export class PokemonService {
     }
   }
 
-  async getList(offset: number = 0, limit: number = 20): Promise<PokemonListResponse> {
+  async getList(
+    offset: number = 0,
+    limit: number = 20,
+    search?: string
+  ): Promise<PokemonListResponse> {
+    if (search) {
+      const cacheKey = `pokemon-list-search-${search.toLowerCase()}`
+      const cached = cache.get<PokemonListResponse>(cacheKey)
+
+      if (cached) {
+        return cached
+      }
+
+      const response = await pokeApiRepository.getPokemonList(0, 2000)
+
+      const searchLower = search.toLowerCase()
+      const filtered = response.results
+        .map((item) => this.transformPokemonListItem(item))
+        .filter(
+          (pokemon) =>
+            pokemon.name.toLowerCase().includes(searchLower) ||
+            pokemon.id.toString().includes(searchLower)
+        )
+
+      const transformed: PokemonListResponse = {
+        count: filtered.length,
+        next: null,
+        previous: null,
+        results: filtered,
+      }
+
+      cache.set(cacheKey, transformed, env.CACHE_TTL_SECONDS)
+      return transformed
+    }
+
     const cacheKey = `pokemon-list-${offset}-${limit}`
     const cached = cache.get<PokemonListResponse>(cacheKey)
 

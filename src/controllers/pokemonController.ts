@@ -9,13 +9,14 @@ export const getPokemons = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    const search = req.query.search as string | undefined
     const offset = parseInt(req.query.offset as string, 10) || 0
     const limit = Math.min(
       parseInt(req.query.limit as string, 10) || PAGINATION.DEFAULT_LIMIT,
       PAGINATION.MAX_LIMIT
     )
 
-    const result = await pokemonService.getList(offset, limit)
+    const result = await pokemonService.getList(offset, limit, search)
     res.json(result)
   } catch (error) {
     next(error)
