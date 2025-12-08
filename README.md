@@ -579,7 +579,10 @@ const getPokemon = async (req: Request, res: Response, next: NextFunction) => {
    NODE_ENV=production
    POKEAPI_BASE_URL=https://pokeapi.co/api/v2
    CACHE_TTL_SECONDS=3600
+   FRONTEND_URL=https://frontend-pkmn.vercel.app/
    ```
+
+   **Important:** Set `FRONTEND_URL` to your Vercel frontend URL (e.g., `https://frontend-pkmn.vercel.app`) to allow CORS requests. You can specify multiple origins separated by commas if needed.
 
 3. **Configure Build**
    - Build Command: `npm run build`
