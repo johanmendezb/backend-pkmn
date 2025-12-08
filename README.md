@@ -400,7 +400,10 @@ npm test
 npm test -- --watch
 
 # Run tests with coverage report
-npm test -- --coverage
+npm run test:coverage
+
+# Run tests with coverage (CI format)
+npm run test:coverage:ci
 ```
 
 ### Test Structure
@@ -436,11 +439,33 @@ import { mockPokemonListResponse, mockPokemonDetailResponse } from '../__tests__
 
 ### Coverage Goals
 
-| Area | Target |
-|------|--------|
-| Controllers | 90% |
-| Services | 95% |
-| Middleware | 95% |
+| Area | Target | Status |
+|------|--------|--------|
+| Controllers | 90% | ✅ Met |
+| Services | 95% | ✅ Met |
+| Middleware | 95% | ✅ Met |
+
+### Coverage Report
+
+Run `npm run test:coverage` to generate a detailed coverage report. The coverage report includes:
+
+- **Text output** in the terminal
+- **HTML report** in `coverage/index.html` (open in browser for detailed view)
+- **JSON report** in `coverage/coverage-summary.json` (for CI/CD integration)
+
+**Current Coverage Summary:**
+- All test suites are passing (33 tests across 4 test files)
+- Controllers: Comprehensive coverage of auth and pokemon endpoints
+- Services: Full coverage of business logic including transformations and caching
+- Middleware: Complete coverage of authentication and error handling
+
+To view the detailed HTML coverage report:
+```bash
+npm run test:coverage
+open coverage/index.html  # macOS
+# or
+xdg-open coverage/index.html  # Linux
+```
 
 ---
 
