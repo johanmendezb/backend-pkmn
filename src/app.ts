@@ -26,7 +26,7 @@ export function createApp(): Express {
   app.use(router)
 
   // Health check endpoint
-  app.get('/health', (req, res) => {
+  app.get('/health', (_req, res) => {
     res.json({ status: 'ok' })
   })
 

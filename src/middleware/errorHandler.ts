@@ -4,9 +4,9 @@ import { ErrorResponse } from '../types'
 
 export const errorHandler = (
   err: Error | AxiosError,
-  req: Request,
+  _req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): void => {
   // Handle Axios errors (from PokeAPI)
   if (err instanceof AxiosError) {

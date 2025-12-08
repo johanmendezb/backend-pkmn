@@ -49,7 +49,7 @@ describe('PokemonController', () => {
 
       expect(response.body).toEqual(mockResponse)
       expect(response.body.results).toHaveLength(2)
-      expect(pokemonService.getList).toHaveBeenCalledWith(0, 20)
+      expect(pokemonService.getList).toHaveBeenCalledWith(0, 20, undefined)
     })
 
     it('should respect limit parameter', async () => {
@@ -67,7 +67,7 @@ describe('PokemonController', () => {
         .set('Authorization', `Bearer ${validToken}`)
         .expect(200)
 
-      expect(pokemonService.getList).toHaveBeenCalledWith(0, 1)
+      expect(pokemonService.getList).toHaveBeenCalledWith(0, 1, undefined)
       expect(response.body.results).toHaveLength(1)
     })
 
@@ -86,7 +86,7 @@ describe('PokemonController', () => {
         .set('Authorization', `Bearer ${validToken}`)
         .expect(200)
 
-      expect(pokemonService.getList).toHaveBeenCalledWith(20, 20)
+      expect(pokemonService.getList).toHaveBeenCalledWith(20, 20, undefined)
     })
 
     it('should include id, name, and image in response', async () => {
@@ -134,7 +134,7 @@ describe('PokemonController', () => {
         .set('Authorization', `Bearer ${validToken}`)
         .expect(200)
 
-      expect(pokemonService.getList).toHaveBeenCalledWith(0, 100)
+      expect(pokemonService.getList).toHaveBeenCalledWith(0, 100, undefined)
     })
   })
 
