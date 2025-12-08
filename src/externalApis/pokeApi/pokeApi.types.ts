@@ -42,6 +42,14 @@ export interface PokeApiForm {
   url: string
 }
 
+export interface PokeApiType {
+  slot: number
+  type: {
+    name: string
+    url: string
+  }
+}
+
 export interface PokeApiPokemonDetail {
   id: number
   name: string
@@ -53,6 +61,7 @@ export interface PokeApiPokemonDetail {
       }
     }
   }
+  types: PokeApiType[]
   abilities: PokeApiAbility[]
   moves: PokeApiMove[]
   forms: Array<{

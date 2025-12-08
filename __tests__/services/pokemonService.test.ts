@@ -117,6 +117,11 @@ describe('PokemonService', () => {
         'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png'
       )
 
+      // Check types transformation
+      expect(result.types).toHaveLength(2)
+      expect(result.types[0]).toEqual({ name: 'grass' })
+      expect(result.types[1]).toEqual({ name: 'poison' })
+
       // Check abilities transformation
       expect(result.abilities).toHaveLength(2)
       expect(result.abilities[0]).toEqual({
@@ -136,6 +141,37 @@ describe('PokemonService', () => {
       // Check forms transformation
       expect(result.forms).toHaveLength(1)
       expect(result.forms[0]).toEqual({ name: 'bulbasaur' })
+    })
+
+    it('should transform types correctly', async () => {
+      const mockResponse = {
+        ...mockPokemonDetailResponse,
+        types: [
+          {
+            slot: 1,
+            type: {
+              name: 'fire',
+              url: 'https://pokeapi.co/api/v2/type/10/',
+            },
+          },
+          {
+            slot: 2,
+            type: {
+              name: 'flying',
+              url: 'https://pokeapi.co/api/v2/type/3/',
+            },
+          },
+        ],
+      }
+
+      vi.mocked(cache.get).mockReturnValue(null)
+      vi.mocked(pokeApiRepository.getPokemonById).mockResolvedValue(mockResponse)
+
+      const result = await pokemonService.getById(1)
+
+      expect(result.types).toHaveLength(2)
+      expect(result.types[0]).toEqual({ name: 'fire' })
+      expect(result.types[1]).toEqual({ name: 'flying' })
     })
 
     it('should use official-artwork image when available', async () => {
@@ -196,6 +232,7 @@ describe('PokemonService', () => {
         id: 1,
         name: 'bulbasaur',
         image: 'https://example.com/1.png',
+        types: [],
         abilities: [],
         moves: [],
         forms: [],

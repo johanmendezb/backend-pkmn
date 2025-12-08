@@ -144,6 +144,7 @@ describe('PokemonController', () => {
         id: 1,
         name: 'bulbasaur',
         image: 'https://example.com/1.png',
+        types: [{ name: 'grass' }, { name: 'poison' }],
         abilities: [
           { name: 'overgrow', isHidden: false },
           { name: 'chlorophyll', isHidden: true },
@@ -230,6 +231,7 @@ describe('PokemonController', () => {
         id: 1,
         name: 'bulbasaur',
         image: 'https://example.com/1.png',
+        types: [{ name: 'grass' }],
         abilities: [
           { name: 'overgrow', isHidden: false },
           { name: 'chlorophyll', isHidden: true },
